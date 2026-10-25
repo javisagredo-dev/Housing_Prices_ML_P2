@@ -1,0 +1,11 @@
+# Versiones mínimas para ejecutar notebooks/Build_Model_Housing.ipynb.
+# El notebook corre en Google Colab (librerías preinstaladas) y en local: pip install -r requirements.txt
+# Con versiones distintas, los resultados de Random Forest y XGBoost cambian levemente; las decisiones
+# de preparación están fijas en el código para que no dependan de eso.
+# La primera celda del notebook imprime las versiones con que se ejecutó.
+numpy>=1.24
+pandas>=2.0
+scikit-learn>=1.4   # TargetEncoder (1.3) y root_mean_squared_error (1.4)
+xgboost>=2.0
+matplotlib>=3.7
+seaborn>=0.12
