@@ -44,7 +44,8 @@ La EP1 dejó el archivo `data/processed/ames_clean.csv` (2.925 filas y 80 column
 │       ├── df_xgboost_*.csv                  conjuntos preparados para XGBoost
 │       └── segmentos.csv                     zona, barrio y condición de venta de cada casa
 ├── notebooks/
-│   └── Build_Model_Housing.ipynb             preparación de datos por modelo
+│   ├── Build_Model_Housing.ipynb             preparación de datos por modelo
+│   └── Modelado_Housing.ipynb                comparación de modelos, evaluación en test y elección
 ├── requirements.txt
 └── README.md
 ```
@@ -53,7 +54,9 @@ Cada modelo tiene tres archivos: `train`, `test` y `test_venta_normal` (el test 
 
 ## Cómo ejecutar
 
-En Google Colab: abrir `notebooks/Build_Model_Housing.ipynb` desde GitHub y ejecutar todas las celdas. La primera celda después de las importaciones clona el repositorio en `/content` (la rama indicada en la variable `RAMA`) para que las rutas a `data/` funcionen.
+Hay dos notebooks. `Build_Model_Housing.ipynb` prepara los datos y escribe los CSV de `data/processed/`; `Modelado_Housing.ipynb` lee esos CSV, entrena los modelos y elige el final. Como los CSV ya están en el repositorio, el notebook de modelado se puede ejecutar sin correr antes el de preparación.
+
+En Google Colab: abrir el notebook desde GitHub y ejecutar todas las celdas. En los dos notebooks, la primera celda después de las importaciones clona el repositorio en `/content` (la rama indicada en la variable `RAMA`) para que las rutas a `data/` funcionen.
 
 En local:
 
@@ -104,22 +107,41 @@ Sesgo por barrio. Con las variables de la venta, Ridge y Lasso sobreestiman en u
 
 Fecha de tasación. Los datos cubren de 2006 a 2010. Para que el modelo no extrapole, al tasar una casa nueva se fija `Yr Sold = 2010`: el modelo tasa a precios de ese período.
 
-## Resultados preliminares
+## Modelos y resultados
 
-Validación cruzada sobre train (2.314 casas residenciales), con la preparación final e hiperparámetros por defecto:
+Se comparan cuatro modelos de tres familias: Ridge y Lasso (regresión lineal regularizada), Random Forest y XGBoost. No hay búsqueda de hiperparámetros; los parámetros iniciales están justificados en la sección 3 de `Modelado_Housing.ipynb`. El criterio de salida y la regla de elección se fijaron en el notebook antes de ver los resultados.
 
-| Modelo | RMSE (USD) | Desv. entre folds | MAE (USD) | MAPE | R² |
-|---|---|---|---|---|---|
-| Ridge | 20.159 | 996 | 13.744 | 8,06 % | 0,930 |
-| Lasso | 20.199 | 1.032 | 13.761 | 8,08 % | 0,930 |
-| XGBoost | 22.351 | 1.350 | 14.310 | 8,39 % | 0,914 |
-| Random Forest | 25.149 | 2.483 | 15.792 | 9,21 % | 0,891 |
+Validación cruzada de 5 folds sobre train (2.314 casas):
 
-Con hiperparámetros por defecto, los modelos lineales superan a los de árboles, y los cuatro quedan dentro de los umbrales de R², RMSE, MAE y MAPE fijados en la EP1. Son resultados de validación cruzada, no de test: el criterio de salida se evalúa en el test, después de la búsqueda de hiperparámetros.
+| Modelo | RMSE val. (USD) | Desv. entre folds | MAPE val. | R² train | R² val. | Brecha |
+|---|---|---|---|---|---|---|
+| Ridge | 20.152 | 1.018 | 8,07 % | 0,940 | 0,930 | 1,0 pts |
+| Lasso | 20.206 | 1.077 | 8,08 % | 0,939 | 0,930 | 0,9 pts |
+| XGBoost | 22.529 | 1.554 | 8,40 % | 0,998 | 0,913 | 8,5 pts |
+| Random Forest | 25.136 | 2.518 | 9,25 % | 0,985 | 0,891 | 9,3 pts |
+
+Test (582 casas), comparado con el criterio de salida de la EP1:
+
+| Modelo | R² | RMSE (USD) | MAE (USD) | MAPE | Brecha R² train-test | Brecha MAPE barrios | Cumple los seis |
+|---|---|---|---|---|---|---|---|
+| Ridge | 0,948 | 19.126 | 12.373 | 6,75 % | −0,9 | 6,1 | Sí |
+| Lasso | 0,948 | 19.241 | 12.407 | 6,77 % | −0,9 | 6,1 | Sí |
+| XGBoost | 0,934 | 21.660 | 13.579 | 7,39 % | 6,3 | 7,7 | No |
+| Random Forest | 0,924 | 23.219 | 14.359 | 7,94 % | 6,1 | 10,0 | No |
+
+Random Forest y XGBoost cumplen los KPI de error, pero no el de sobreajuste: con árboles sin límite de profundidad casi memorizan train. Random Forest tampoco cumple el de equidad. Con la venta normal impuesta, Ridge y Lasso siguen cumpliendo los seis KPI.
+
+El modelo elegido es Lasso. Ridge tiene un RMSE de validación 54 USD menor, pero la diferencia de R² entre los dos es de 0,04 puntos, por debajo de la tolerancia de 1 punto que fijó la EP1, y en ese caso se prefiere el modelo más interpretable. Lasso usa 105 de las 138 columnas.
+
+En lenguaje de negocio: el modelo entrega al perito un valor de partida para una vivienda en zona residencial. En la mitad de las casas de test el error fue menor a 8.659 USD (5,3 % del precio), y en el 77,8 % fue menor a 10 %. Como el modelo es lineal en escala logarítmica, cada estimación se descompone en el aporte de cada variable (por ejemplo, la superficie habitable suma un 8,3 % al valor de una casa), así que el valor se puede justificar ante un cliente o un banco. Las variables que más pesan son la superficie habitable, la calidad general y la superficie del sótano.
+
+Limitaciones del modelo elegido:
+
+- Subestima las casas caras: 8 de las 9 casas de test de más de 450.000 USD quedan bajo su precio real.
+- Sobreestima algo las casas del cuartil más barato (+3,4 % en promedio), que es el tramo con mayor error (MAPE de 8,8 %).
+- En las ventas anómalas el MAPE es de 11,2 % y en las ventas entre familiares de 15,5 %, frente a 6,3 % en las normales. La condición de venta no se conoce antes de vender.
 
 ## Pendiente
 
-- Búsqueda de hiperparámetros con los pipelines completos sobre los datos sin codificar, para evitar fuga en la validación cruzada.
-- Evaluación en test, con el test real y con el de venta normal impuesta, y elección del modelo final según el criterio de salida.
-- Error por segmento (barrio, condición de venta) con `segmentos.csv`, brecha de equidad entre barrios e importancia de variables por permutación.
-- Definir la ubicación y el formato de exportación de los CSV.
+- Búsqueda de hiperparámetros con los pipelines completos sobre los datos sin codificar, para evitar fuga en la validación cruzada. Ahí se puede ver si Random Forest y XGBoost cumplen la brecha de R² al limitar la profundidad de los árboles.
+- Definir la ubicación y el formato de exportación de los CSV, y si se guarda el modelo entrenado en `models/`.
