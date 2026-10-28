@@ -128,11 +128,11 @@ Test (582 casas), comparado con el criterio de salida de la EP1:
 | XGBoost | 0,934 | 21.660 | 13.579 | 7,39 % | 6,3 | 7,7 | No |
 | Random Forest | 0,924 | 23.219 | 14.359 | 7,94 % | 6,1 | 10,0 | No |
 
-Random Forest y XGBoost cumplen los KPI de error, pero no el de sobreajuste: con árboles sin límite de profundidad casi memorizan train. Random Forest tampoco cumple el de equidad. Con la venta normal impuesta, Ridge y Lasso siguen cumpliendo los seis KPI.
+Random Forest y XGBoost cumplen los KPI de error, pero no el de sobreajuste: casi memorizan train (Random Forest con árboles sin límite de profundidad, XGBoost con 500 árboles de profundidad 6 sin submuestreo). Random Forest tampoco cumple el de equidad. Con la venta normal impuesta, Ridge y Lasso siguen cumpliendo los seis KPI.
 
 El modelo elegido es Lasso. Ridge tiene un RMSE de validación 54 USD menor, pero la diferencia de R² entre los dos es de 0,04 puntos, por debajo de la tolerancia de 1 punto que fijó la EP1, y en ese caso se prefiere el modelo más interpretable. Lasso usa 105 de las 138 columnas.
 
-En lenguaje de negocio: el modelo entrega al perito un valor de partida para una vivienda en zona residencial. En la mitad de las casas de test el error fue menor a 8.659 USD (5,3 % del precio), y en el 77,8 % fue menor a 10 %. Como el modelo es lineal en escala logarítmica, cada estimación se descompone en el aporte de cada variable (por ejemplo, la superficie habitable suma un 8,3 % al valor de una casa), así que el valor se puede justificar ante un cliente o un banco. Las variables que más pesan son la superficie habitable, la calidad general y la superficie del sótano.
+En lenguaje de negocio: el modelo entrega al perito un valor de partida para una vivienda en zona residencial. En la mitad de las casas de test el error fue menor a 8.659 USD, en la mitad fue menor a 5,3 % del precio y en el 77,8 % fue menor a 10 %. Como el modelo es lineal en escala logarítmica, cada estimación se descompone en el aporte de cada variable (por ejemplo, la superficie habitable suma un 8,3 % al valor de una casa), así que el valor se puede justificar ante un cliente o un banco. Las variables que más pesan son la superficie habitable, la calidad general y la superficie del sótano.
 
 Limitaciones del modelo elegido:
 

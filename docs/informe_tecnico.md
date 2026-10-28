@@ -125,7 +125,7 @@ El predictor más fuerte es una nota de calidad asignada por el tasador municipa
 
 ### 4.4 Outliers
 
-El IQR (fuera de Q1 − 1,5·IQR o Q3 + 1,5·IQR) y el z-score (más de 3 desviaciones de la media) coinciden en marcar 232 casas (7,9 %) en al menos una variable continua. El IQR marca bastantes más casos que el z-score: 202 frente a 28 en `Lot Frontage`.
+El IQR (fuera de Q1 − 1,5·IQR o Q3 + 1,5·IQR) y el z-score (más de 3 desviaciones de la media) coinciden en marcar 232 casas (7,9 %) en al menos una variable continua. El IQR marca más casos que el z-score en la mayoría de las variables (202 frente a 28 en `Lot Frontage`), aunque en `BsmtFin SF 1` y `2nd Flr SF` marca menos.
 
 Antes de decidir, se revisó de qué tipo era cada outlier:
 
@@ -176,7 +176,7 @@ En Ridge y Lasso se compararon cinco variantes:
 |---|---|---|
 | A | Escalado de la EP1 (`RobustScaler` y `StandardScaler`) | Base |
 | B | A + `log1p` en las 5 variables | MAPE unos 0,1 puntos menor; se adopta |
-| C | B + recorte de `Lot Frontage` al percentil 99 | RMSE unos 270 USD mayor; se descarta |
+| C | B + recorte al percentil 99 de las 5 superficies sin `log1p` (`Lot Frontage`, `BsmtFin SF 1`, `Bsmt Unf SF`, `Total Bsmt SF`, `2nd Flr SF`) | RMSE unos 270 USD mayor; se descarta |
 | D | C sin zonas no residenciales | No comparable con las demás; se decide aparte (sección 5.5) |
 | E | B + `StandardScaler` en las ordinales | Igual que B; se adopta para que la penalización trate a todas las variables en la misma escala |
 
@@ -316,7 +316,7 @@ Fijada antes de entrenar:
 | XGBoost | 3.598 | 22.529 | 1.554 | 8,40 % | 0,998 | 0,913 | 8,5 |
 | Random Forest | 9.451 | 25.136 | 2.518 | 9,25 % | 0,985 | 0,891 | 9,3 |
 
-Los lineales rinden casi igual en las casas que vieron y en las nuevas. Random Forest y XGBoost casi memorizan train y en validación quedan peor que los lineales. Es la consecuencia de usar árboles sin límite de profundidad; limitarlos sería búsqueda de hiperparámetros.
+Los lineales rinden casi igual en las casas que vieron y en las nuevas. Random Forest y XGBoost casi memorizan train y en validación quedan peor que los lineales. En Random Forest es la consecuencia de usar árboles sin límite de profundidad; en XGBoost, de sumar 500 árboles de profundidad 6 sin submuestreo de filas ni de columnas. Limitarlos sería búsqueda de hiperparámetros.
 
 ### 9.3 Test
 
@@ -362,7 +362,7 @@ El modelo entrega al perito un valor de partida para una vivienda en zona reside
 
 Error esperado, según el test:
 
-- En la mitad de las casas, el error es menor a 8.659 USD (5,3 % del precio).
+- En la mitad de las casas, el error es menor a 8.659 USD, y en la mitad es menor a 5,3 % de su precio. Son dos medianas distintas: una del error en dólares y otra del error relativo.
 - El 77,8 % de las casas queda con un error menor a 10 % y el 96,6 % con uno menor a 20 %.
 - Solo 4 de las 582 casas superan el 30 %, y en las cuatro el modelo sobreestimó el precio.
 
