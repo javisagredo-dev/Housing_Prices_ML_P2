@@ -44,8 +44,7 @@ La EP1 dejó el archivo `data/processed/ames_clean.csv` (2.925 filas y 80 column
 │       ├── df_xgboost_*.csv                  conjuntos preparados para XGBoost
 │       └── segmentos.csv                     zona, barrio y condición de venta de cada casa
 ├── notebooks/
-│   ├── Build_Model_Housing.ipynb             preparación de datos por modelo
-│   └── Modelado_Housing.ipynb                comparación de modelos, evaluación en test y elección
+│   └── Housing_Prices_ML_Final.ipynb         preparación de datos, modelado, evaluación en test y elección
 ├── requirements.txt
 └── README.md
 ```
@@ -54,9 +53,9 @@ Cada modelo tiene tres archivos: `train`, `test` y `test_venta_normal` (el test 
 
 ## Cómo ejecutar
 
-Hay dos notebooks. `Build_Model_Housing.ipynb` prepara los datos y escribe los CSV de `data/processed/`; `Modelado_Housing.ipynb` lee esos CSV, entrena los modelos y elige el final. Como los CSV ya están en el repositorio, el notebook de modelado se puede ejecutar sin correr antes el de preparación.
+Todo el trabajo está en un solo notebook, `Housing_Prices_ML_Final.ipynb`, en dos partes. La parte 1 (secciones 1 a 18) prepara los datos y escribe los CSV de `data/processed/`. La parte 2 (secciones 19 a 27) lee esos CSV, entrena los modelos, los evalúa en test y elige el final.
 
-En Google Colab: abrir el notebook desde GitHub y ejecutar todas las celdas. En los dos notebooks, la primera celda después de las importaciones clona el repositorio en `/content` (la rama indicada en la variable `RAMA`) para que las rutas a `data/` funcionen.
+En Google Colab: abrir el notebook desde GitHub y ejecutar todas las celdas. La primera celda después de las importaciones clona el repositorio en `/content` (la rama indicada en la variable `RAMA`) para que las rutas a `data/` funcionen.
 
 En local:
 
@@ -109,7 +108,7 @@ Fecha de tasación. Los datos cubren de 2006 a 2010. Para que el modelo no extra
 
 ## Modelos y resultados
 
-Se comparan cuatro modelos de tres familias: Ridge y Lasso (regresión lineal regularizada), Random Forest y XGBoost. No hay búsqueda de hiperparámetros; los parámetros iniciales están justificados en la sección 3 de `Modelado_Housing.ipynb`. El criterio de salida y la regla de elección se fijaron en el notebook antes de ver los resultados.
+Se comparan cuatro modelos de tres familias: Ridge y Lasso (regresión lineal regularizada), Random Forest y XGBoost. No hay búsqueda de hiperparámetros; los parámetros iniciales están justificados en la sección 21 del notebook. El criterio de salida y la regla de elección se fijaron en el notebook antes de ver los resultados.
 
 Validación cruzada de 5 folds sobre train (2.314 casas):
 

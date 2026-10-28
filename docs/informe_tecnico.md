@@ -64,12 +64,12 @@ Metodología. El proyecto sigue CRISP-DM:
 |---|---|---|
 | Comprensión del negocio | Problema, objetivos, KPI y criterio de salida | EP1; secciones 1 y 2 |
 | Comprensión de los datos | Distribuciones, correlaciones, nulos, outliers, multicolinealidad | EP1; sección 4 |
-| Preparación de los datos | Limpieza, transformaciones y codificación por familia de modelos | `Build_Model_Housing.ipynb`; sección 5 |
-| Modelado | Cuatro modelos con parámetros iniciales justificados | `Modelado_Housing.ipynb`; secciones 6 a 8 |
-| Evaluación | KPI en test, error por segmento, elección e interpretación | `Modelado_Housing.ipynb`; sección 9 |
+| Preparación de los datos | Limpieza, transformaciones y codificación por familia de modelos | Notebook, parte 1 (secciones 1 a 18); sección 5 |
+| Modelado | Cuatro modelos con parámetros iniciales justificados | Notebook, parte 2 (secciones 19 a 22); secciones 6 a 8 |
+| Evaluación | KPI en test, error por segmento, elección e interpretación | Notebook, parte 2 (secciones 23 a 27); sección 9 |
 | Despliegue | Fuera del alcance | |
 
-El trabajo volvió varias veces a fases anteriores. El análisis de sesgos de la EP1 llevó a entrenar sobre el logaritmo del precio. En el notebook de preparación, el análisis de las casas peor predichas (sección 4.5) llevó a las pruebas sobre zonas no residenciales y variables de la venta.
+El trabajo volvió varias veces a fases anteriores. El análisis de sesgos de la EP1 llevó a entrenar sobre el logaritmo del precio. En la parte 1 del notebook, el análisis de las casas peor predichas (sección 5 del notebook y 4.5 de este informe) llevó a las pruebas sobre zonas no residenciales y variables de la venta.
 
 ## 3. Fuentes de datos
 
@@ -99,7 +99,7 @@ Cada modelo tiene tres archivos: `train`, `test` y `test_venta_normal` (sección
 
 ## 4. Análisis exploratorio de los datos
 
-El análisis exploratorio completo está en el informe de la EP1. Esta sección resume los hallazgos que condicionaron las decisiones de esta entrega y agrega los del notebook de preparación.
+El análisis exploratorio completo está en el informe de la EP1. Esta sección resume los hallazgos que condicionaron las decisiones de esta entrega y agrega los de la parte 1 del notebook.
 
 ### 4.1 Variable objetivo
 
@@ -151,7 +151,7 @@ Hay 29 casas en zona comercial, industrial o agrícola, con medianas de precio e
 
 ## 5. Preparación y transformación de los datos
 
-La preparación está en `notebooks/Build_Model_Housing.ipynb`. Cada decisión importante se probó con validación cruzada de 5 folds solo sobre train, con un criterio fijado antes de ver el resultado. El test no participó en ninguna decisión.
+La preparación está en la parte 1 del notebook (secciones 1 a 18). Cada decisión importante se probó con validación cruzada de 5 folds solo sobre train, con un criterio fijado antes de ver el resultado. El test no participó en ninguna decisión.
 
 ### 5.1 Limpieza heredada de la EP1
 
@@ -267,14 +267,16 @@ Python con pandas y numpy para los datos, scikit-learn para la preparación, los
 
 ### 8.2 Estructura
 
-- `Build_Model_Housing.ipynb` arma la preparación como un `Pipeline` de scikit-learn con un `ColumnTransformer`, que aplica a cada grupo de columnas su transformación. Así, en la validación cruzada la preparación se ajusta de nuevo en cada fold. Al final guarda los conjuntos ya transformados en `data/processed/`.
-- `Modelado_Housing.ipynb` lee esos conjuntos, entrena los cuatro modelos, los evalúa y elige el final.
+Todo el trabajo está en un solo notebook, `notebooks/Housing_Prices_ML_Final.ipynb`, dividido en dos partes:
+
+- La parte 1 (secciones 1 a 18) arma la preparación como un `Pipeline` de scikit-learn con un `ColumnTransformer`, que aplica a cada grupo de columnas su transformación. Así, en la validación cruzada la preparación se ajusta de nuevo en cada fold. Al final guarda los conjuntos ya transformados en `data/processed/`.
+- La parte 2 (secciones 19 a 27) lee esos conjuntos desde los CSV, entrena los cuatro modelos, los evalúa y elige el final.
 
 Los cuatro modelos se envuelven en `TransformedTargetRegressor`, que entrena sobre `log1p(SalePrice)` y devuelve las predicciones en dólares con `expm1`. Así todas las métricas quedan en dólares.
 
 ### 8.3 Parámetros iniciales
 
-No hay búsqueda de hiperparámetros. Se usan los mismos parámetros con que el notebook de preparación tomó sus decisiones, para que los resultados de los dos notebooks sean comparables.
+No hay búsqueda de hiperparámetros. Se usan los mismos parámetros con que la parte 1 tomó sus decisiones de preparación, para que los resultados de las dos partes sean comparables.
 
 | Modelo | Parámetro | Valor | Justificación |
 |---|---|---|---|
@@ -449,8 +451,7 @@ Estructura del repositorio:
 │   ├── raw/Ames_Iowa_Housing_Dataset.csv
 │   └── processed/                ames_clean.csv, conjuntos por modelo y segmentos.csv
 ├── notebooks/
-│   ├── Build_Model_Housing.ipynb  preparación de datos por modelo
-│   └── Modelado_Housing.ipynb     comparación de modelos, evaluación y elección
+│   └── Housing_Prices_ML_Final.ipynb  preparación de datos, modelado, evaluación y elección
 ├── requirements.txt
 └── README.md
 ```
@@ -458,9 +459,9 @@ Estructura del repositorio:
 Ejecución:
 
 - Google Colab: abrir el notebook desde GitHub y ejecutar todas las celdas. La celda de entorno clona el repositorio en `/content` para que las rutas a `data/` funcionen.
-- Local: clonar el repositorio, instalar las dependencias con `pip install -r requirements.txt` y ejecutar los notebooks desde `notebooks/`.
+- Local: clonar el repositorio, instalar las dependencias con `pip install -r requirements.txt` y ejecutar el notebook desde `notebooks/`.
 
-El notebook de modelado lee los conjuntos de `data/processed/`, que ya están en el repositorio, así que se puede ejecutar sin correr antes el de preparación. Si se corre el de preparación, vuelve a escribir los mismos archivos.
+La parte 2 lee los conjuntos desde los CSV de `data/processed/` que escribe la sección 17, igual que los leería un proceso que no ejecutó la parte 1. Esos CSV ya están en el repositorio; al ejecutar el notebook completo se vuelven a escribir los mismos archivos.
 
 Todos los procesos aleatorios usan la semilla 42. Las decisiones de preparación quedan fijas en el código; las pruebas se recalculan en cada ejecución y muestran un aviso si en otro entorno dan un resultado distinto. Con otras versiones de las librerías, Random Forest y XGBoost pueden variar en algunos cientos de dólares de RMSE.
 
